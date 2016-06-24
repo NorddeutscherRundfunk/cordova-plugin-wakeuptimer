@@ -9,13 +9,19 @@ import org.json.JSONObject;
 
 import android.annotation.SuppressLint;
 import android.app.AlarmManager;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.media.AudioManager;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.v4.app.NotificationCompat;
 import android.util.Log;
+
+import de.ndr.app.njoy.R;
 
 public class WakeupReceiver extends BroadcastReceiver {
 
@@ -26,6 +32,9 @@ public class WakeupReceiver extends BroadcastReceiver {
 	public void onReceive(Context context, Intent intent) {
 		SimpleDateFormat sdf=new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 		Log.d(LOG_TAG, "wakeuptimer expired at " + sdf.format(new Date().getTime()));
+	
+	
+		
 	
 		try {
 			String packageName = context.getPackageName();
@@ -47,6 +56,45 @@ public class WakeupReceiver extends BroadcastReceiver {
 			if (extras!=null) {
 				i.putExtra("extra", extras);
 			}
+
+			JSONObject notificationSound = new JSONObject(extras);
+
+			Log.d(LOG_TAG, "wakeuptimer extras[" + extras + "]>" + notificationSound.getString("sound"));
+
+			// try to get the audio
+
+			AudioManager am = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
+			// Request audio focus for playback
+			int result = am.requestAudioFocus(new AudioManager.OnAudioFocusChangeListener() {
+												  @Override
+												  public void onAudioFocusChange(int focusChange) {
+													  Log.d(LOG_TAG, "onAudioFocusChange");
+												  }
+											  },
+					// Use the music stream.
+					AudioManager.STREAM_MUSIC,
+					// Request permanent focus.
+					AudioManager.AUDIOFOCUS_GAIN);
+
+			if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
+				// am.registerMediaButtonEventReceiver(RemoteControlReceiver); //do we even need that?
+				// Start playback
+
+				NotificationCompat.Builder builder = new NotificationCompat.Builder(
+						context).setSmallIcon(R.drawable.icon)
+						.setContentTitle("Titletest").setAutoCancel(true);
+				Uri alarmSound = Uri.parse(notificationSound.getString("sound"));
+				builder.setSound(alarmSound);
+				Intent notificationIntent = new Intent(context, WakeupReceiver.class);
+				PendingIntent contentIntent = PendingIntent.getActivity(context, 0, notificationIntent,
+						PendingIntent.FLAG_UPDATE_CURRENT);
+				builder.setContentIntent(contentIntent);
+				NotificationManager manager = (NotificationManager)
+						context.getSystemService(Context.NOTIFICATION_SERVICE);
+				manager.notify(1, builder.build());
+
+			}
+			
 			i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 			context.startActivity(i);
 
