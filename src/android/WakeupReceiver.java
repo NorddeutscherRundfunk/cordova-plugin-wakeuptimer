@@ -59,7 +59,7 @@ public class WakeupReceiver extends BroadcastReceiver {
 
 			JSONObject notificationSound = new JSONObject(extras);
 
-			Log.d(LOG_TAG, "wakeuptimer extras[" + extras + "]>" + notificationSound.getString("sound"));
+			Log.d(LOG_TAG, "wakeuptimer extras[" + extras + "]>" + notificationSound.getString("sound") + notificationSound.getString("message"));
 
 			// try to get the audio
 
@@ -82,7 +82,7 @@ public class WakeupReceiver extends BroadcastReceiver {
 
 				NotificationCompat.Builder builder = new NotificationCompat.Builder(
 						context).setSmallIcon(R.drawable.icon)
-						.setContentTitle("Titletest").setAutoCancel(true);
+						.setContentTitle(notificationSound.getString("message")).setAutoCancel(true);
 				Uri alarmSound = Uri.parse(notificationSound.getString("sound"));
 				builder.setSound(alarmSound);
 				Intent notificationIntent = new Intent(context, WakeupReceiver.class);
