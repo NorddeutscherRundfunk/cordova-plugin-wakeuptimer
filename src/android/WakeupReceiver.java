@@ -26,6 +26,7 @@ import de.ndr.app.njoy.R;
 public class WakeupReceiver extends BroadcastReceiver {
 
 	private static final String LOG_TAG = "WakeupReceiver";
+	public static final String MAIN_ACTION               = "ACTION MAIN";
 
 	@SuppressLint({ "SimpleDateFormat", "NewApi" })
 	@Override
@@ -84,14 +85,27 @@ public class WakeupReceiver extends BroadcastReceiver {
 						context).setSmallIcon(R.drawable.icon)
 						.setContentTitle(notificationSound.getString("message")).setAutoCancel(true);
 				Uri alarmSound = Uri.parse(notificationSound.getString("sound"));
+
+				int notificationId = Integer.parseInt(notificationSound.getString("id"));
+
+				Log.d(LOG_TAG, "notificationId " + notificationId);
+
 				builder.setSound(alarmSound);
-				Intent notificationIntent = new Intent(context, WakeupReceiver.class);
-				PendingIntent contentIntent = PendingIntent.getActivity(context, 0, notificationIntent,
-						PendingIntent.FLAG_UPDATE_CURRENT);
-				builder.setContentIntent(contentIntent);
+				//Intent notificationIntent = new Intent(context, WakeupReceiver.class);
+				// contentIntent must redirect to App
+				//PendingIntent contentIntent = PendingIntent.getActivity(context, 0, notificationIntent,
+				//		PendingIntent.FLAG_UPDATE_CURRENT);
+
+				Intent mainIntent = new Intent(context, Class.forName("de.ndr.app.njoy.MainActivity"));
+				mainIntent.setAction(MAIN_ACTION);
+				mainIntent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+				//PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, mainIntent, 0);
+				PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, mainIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+				builder.setContentIntent(pendingIntent);
 				NotificationManager manager = (NotificationManager)
 						context.getSystemService(Context.NOTIFICATION_SERVICE);
-				manager.notify(1, builder.build());
+				manager.notify(notificationId, builder.build());
 
 			}
 			
