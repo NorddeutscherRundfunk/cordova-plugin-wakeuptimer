@@ -1,12 +1,15 @@
 package org.nypr.cordova.wakeupplugin;
 
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.GregorianCalendar;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.TimeZone;
+import android.annotation.SuppressLint;
+import android.app.AlarmManager;
+import android.app.PendingIntent;
+import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.os.Build;
+import android.os.Bundle;
+import android.preference.PreferenceManager;
+import android.util.Log;
 
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaPlugin;
@@ -15,16 +18,13 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import android.content.Context;
-import android.content.SharedPreferences;
-import android.annotation.SuppressLint;
-import android.app.AlarmManager;
-import android.app.PendingIntent;
-import android.content.Intent;
-import android.os.Build;
-import android.os.Bundle;
-import android.preference.PreferenceManager;
-import android.util.Log;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.TimeZone;
 
 public class WakeupPlugin extends CordovaPlugin {
 
@@ -33,7 +33,10 @@ public class WakeupPlugin extends CordovaPlugin {
 	protected static final int ID_DAYLIST_OFFSET = 10010;
 	protected static final int ID_ONETIME_OFFSET = 10000;
 	protected static final int ID_SNOOZE_OFFSET = 10001;
-	
+
+	// To inform the user about the state of the app in callbacks
+	protected static Boolean isInBackground = true;
+
 	public static  Map<String , Integer> daysOfWeek = new HashMap<String , Integer>() {
 		private static final long serialVersionUID = 1L;
 		{
@@ -336,6 +339,32 @@ public class WakeupPlugin extends CordovaPlugin {
 		editor = prefs.edit();
 		editor.putString("alarms", alarms.toString());
 		editor.commit();
+
+	}
+
+	/**
+	 * Fire given event on JS side. Does inform all event listeners.
+	 *
+	 * @param event
+	 *      The event name
+	 */
+	static void fireEvent (String event) {
+
+		if(WakeupPlugin.connectionCallbackContext != null) {
+			try {
+				JSONObject parameter = new JSONObject();
+				parameter.put("type", "broadcast");
+				parameter.put("rootScopeBroadcast", "fireRootscopeBroadcast");
+
+				// callback.success(parameter);
+				PluginResult result = new PluginResult(PluginResult.Status.OK, parameter);
+				result.setKeepCallback(true);
+				WakeupPlugin.connectionCallbackContext.sendPluginResult(result);
+
+			} catch (JSONException e) {
+				Log.e(LOG_TAG, e.toString());
+			}
+		}
 
 	}
 

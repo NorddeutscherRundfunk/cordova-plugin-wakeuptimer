@@ -2,6 +2,7 @@ package org.nypr.cordova.wakeupplugin;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Random;
 
 import org.apache.cordova.PluginResult;
 import org.json.JSONException;
@@ -72,18 +73,21 @@ public class WakeupReceiver extends BroadcastReceiver {
 													  Log.d(LOG_TAG, "onAudioFocusChange");
 												  }
 											  },
-					// Use the music stream.
-					AudioManager.STREAM_MUSIC,
-					// Request permanent focus.
-					AudioManager.AUDIOFOCUS_GAIN);
+			// Use the music stream.
+			AudioManager.STREAM_MUSIC,
+			// Request permanent focus.
+			AudioManager.AUDIOFOCUS_GAIN);
 
 			if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
 				// am.registerMediaButtonEventReceiver(RemoteControlReceiver); //do we even need that?
 				// Start playback
 
+
+
 				NotificationCompat.Builder builder = new NotificationCompat.Builder(
 						context).setSmallIcon(R.drawable.icon)
 						.setContentTitle(notificationSound.getString("message")).setAutoCancel(true);
+						;
 				Uri alarmSound = Uri.parse(notificationSound.getString("sound"));
 
 				int notificationId = Integer.parseInt(notificationSound.getString("id"));
@@ -96,13 +100,32 @@ public class WakeupReceiver extends BroadcastReceiver {
 				//PendingIntent contentIntent = PendingIntent.getActivity(context, 0, notificationIntent,
 				//		PendingIntent.FLAG_UPDATE_CURRENT);
 
-				Intent mainIntent = new Intent(context, Class.forName("de.ndr.app.njoy.MainActivity"));
-				mainIntent.setAction(MAIN_ACTION);
-				mainIntent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
-				//PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, mainIntent, 0);
-				PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, mainIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
-				builder.setContentIntent(pendingIntent);
+				/*
+
+				        if (clickActivity == null)
+							return;
+
+						Intent intent = new Intent(context, clickActivity)
+								.putExtra(Options.EXTRA, options.toString())
+								.setFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
+
+						int reqCode = new Random().nextInt();
+
+						PendingIntent contentIntent = PendingIntent.getActivity(
+								context, reqCode, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+				 */
+
+				Intent clickIntent = new Intent(context, WakeupClickActivity.class);
+				clickIntent.setFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
+				int reqCode = new Random().nextInt();
+//				mainIntent.setAction(MAIN_ACTION);
+//				mainIntent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+				//PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, mainIntent, 0);
+				PendingIntent pendingClickIntent = PendingIntent.getActivity(context, reqCode, clickIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+				builder.setContentIntent(pendingClickIntent);
 				NotificationManager manager = (NotificationManager)
 						context.getSystemService(Context.NOTIFICATION_SERVICE);
 				manager.notify(notificationId, builder.build());

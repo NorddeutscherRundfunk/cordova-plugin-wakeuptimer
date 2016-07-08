@@ -40,6 +40,15 @@
         <source-file src="src/android/WakeupPlugin.java" target-dir="src/org/nypr/cordova/wakeupplugin/" />
         <source-file src="src/android/WakeupReceiver.java" target-dir="src/org/nypr/cordova/wakeupplugin/" />
         <source-file src="src/android/WakeupBootReceiver.java" target-dir="src/org/nypr/cordova/wakeupplugin/" />
+		<source-file src="src/android/WakeupClickActivity.java" target-dir="src/org/nypr/cordova/wakeupplugin/" />
+		
+		
+        <activity
+            android:name="org.nypr.cordova.wakeupplugin.WakeupClickActivity"
+            android:launchMode="singleInstance"
+            android:theme="@android:style/Theme.NoDisplay"
+            android:exported="false" />
+		
     </platform>
 
     <!-- ios -->
