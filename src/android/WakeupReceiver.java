@@ -102,7 +102,7 @@ public class WakeupReceiver extends BroadcastReceiver {
 				//PendingIntent contentIntent = PendingIntent.getActivity(context, 0, notificationIntent,
 				//		PendingIntent.FLAG_UPDATE_CURRENT);
 
-				Intent mainIntent = new Intent(context, Class.forName("de.ndr.app.njoy.MainActivity"));
+				Intent mainIntent = new Intent(context, Class.forName(packageName+".MainActivity"));
 				mainIntent.setAction(MAIN_ACTION);
 				mainIntent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
 				//PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, mainIntent, 0);
