@@ -2,7 +2,6 @@ package org.nypr.cordova.wakeupplugin;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.Random;
 
 import org.apache.cordova.PluginResult;
 import org.json.JSONException;
@@ -15,14 +14,15 @@ import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
+import android.content.res.Resources;
 import android.media.AudioManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
-
-import de.ndr.app.njoy.R;
 
 public class WakeupReceiver extends BroadcastReceiver {
 
@@ -73,21 +73,23 @@ public class WakeupReceiver extends BroadcastReceiver {
 													  Log.d(LOG_TAG, "onAudioFocusChange");
 												  }
 											  },
-			// Use the music stream.
-			AudioManager.STREAM_MUSIC,
-			// Request permanent focus.
-			AudioManager.AUDIOFOCUS_GAIN);
+					// Use the music stream.
+					AudioManager.STREAM_MUSIC,
+					// Request permanent focus.
+					AudioManager.AUDIOFOCUS_GAIN);
 
 			if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
 				// am.registerMediaButtonEventReceiver(RemoteControlReceiver); //do we even need that?
 				// Start playback
-
-
+				PackageManager pm=context.getPackageManager();
+				ApplicationInfo applicationInfo=pm.getApplicationInfo(packageName,PackageManager.GET_META_DATA);
+				Resources resources=pm.getResourcesForApplication(applicationInfo);
+				int appIconResId=applicationInfo.icon;
+				//Bitmap appIconBitmap=BitmapFactory.decodeResource(resources,appIconResId);
 
 				NotificationCompat.Builder builder = new NotificationCompat.Builder(
-						context).setSmallIcon(R.drawable.icon)
+						context).setSmallIcon(appIconResId)
 						.setContentTitle(notificationSound.getString("message")).setAutoCancel(true);
-						;
 				Uri alarmSound = Uri.parse(notificationSound.getString("sound"));
 
 				int notificationId = Integer.parseInt(notificationSound.getString("id"));
@@ -100,32 +102,13 @@ public class WakeupReceiver extends BroadcastReceiver {
 				//PendingIntent contentIntent = PendingIntent.getActivity(context, 0, notificationIntent,
 				//		PendingIntent.FLAG_UPDATE_CURRENT);
 
-
-				/*
-
-				        if (clickActivity == null)
-							return;
-
-						Intent intent = new Intent(context, clickActivity)
-								.putExtra(Options.EXTRA, options.toString())
-								.setFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
-
-						int reqCode = new Random().nextInt();
-
-						PendingIntent contentIntent = PendingIntent.getActivity(
-								context, reqCode, intent, PendingIntent.FLAG_UPDATE_CURRENT);
-
-				 */
-
-				Intent clickIntent = new Intent(context, WakeupClickActivity.class);
-				clickIntent.setFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
-				int reqCode = new Random().nextInt();
-//				mainIntent.setAction(MAIN_ACTION);
-//				mainIntent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+				Intent mainIntent = new Intent(context, Class.forName("de.ndr.app.njoy.MainActivity"));
+				mainIntent.setAction(MAIN_ACTION);
+				mainIntent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
 				//PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, mainIntent, 0);
-				PendingIntent pendingClickIntent = PendingIntent.getActivity(context, reqCode, clickIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+				PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, mainIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
-				builder.setContentIntent(pendingClickIntent);
+				builder.setContentIntent(pendingIntent);
 				NotificationManager manager = (NotificationManager)
 						context.getSystemService(Context.NOTIFICATION_SERVICE);
 				manager.notify(notificationId, builder.build());
@@ -169,6 +152,8 @@ public class WakeupReceiver extends BroadcastReceiver {
 		} catch (JSONException e){
 			e.printStackTrace();
 		} catch (ClassNotFoundException e) {
+			e.printStackTrace();
+		} catch (PackageManager.NameNotFoundException e) {
 			e.printStackTrace();
 		}
 	}
