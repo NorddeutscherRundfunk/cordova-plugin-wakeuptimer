@@ -97,8 +97,9 @@ public class WakeupReceiver extends BroadcastReceiver {
 				Uri alarmSound = Uri.parse(notificationSound.getString("sound"));
 
 				int notificationId = Integer.parseInt(notificationSound.getString("id"));
+				String streamUrl = notificationSound.getString("streamurl");
 
-				Log.d(LOG_TAG, "notificationId " + notificationId);
+				Log.d(LOG_TAG, "notificationId " + notificationId + " stream@"+ streamUrl);
 
 				//builder.setSound(alarmSound);
 				//Intent notificationIntent = new Intent(context, WakeupReceiver.class);
