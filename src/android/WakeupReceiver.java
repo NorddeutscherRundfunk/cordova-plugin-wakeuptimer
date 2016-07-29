@@ -8,6 +8,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.annotation.SuppressLint;
+import android.app.ActivityManager;
 import android.app.AlarmManager;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -18,54 +19,57 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.media.AudioManager;
+import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
+import de.ndr.audioplugin.AudioPlayerService;
+
 public class WakeupReceiver extends BroadcastReceiver {
 
 	private static final String LOG_TAG = "WakeupReceiver";
-	public static final String MAIN_ACTION               = "ACTION MAIN";
+	public static final String MAIN_ACTION = "ACTION MAIN";
+
+	private Context localContext;
 
 	@SuppressLint({ "SimpleDateFormat", "NewApi" })
 	@Override
 	public void onReceive(Context context, Intent intent) {
+		localContext = context;
 		SimpleDateFormat sdf=new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 		Log.d(LOG_TAG, "wakeuptimer expired at " + sdf.format(new Date().getTime()));
-	
-	
-		
-	
+
 		try {
-			String packageName = context.getPackageName();
-			Intent launchIntent = context.getPackageManager().getLaunchIntentForPackage(packageName);
-			String className = launchIntent.getComponent().getClassName();		    	
+			String packageName = localContext.getPackageName();
+			Intent launchIntent = localContext.getPackageManager().getLaunchIntentForPackage(packageName);
+			String className = launchIntent.getComponent().getClassName();
 			Log.d(LOG_TAG, "launching activity for class " + className);
 
 			@SuppressWarnings("rawtypes")
-			Class c = Class.forName(className); 
+			Class c = Class.forName(className);
 
-			Intent i = new Intent(context, c);
+			Intent i = new Intent(localContext, c);
 			i.putExtra("wakeup", true);
 			Bundle extrasBundle = intent.getExtras();
 			String extras=null;
 			if (extrasBundle!=null && extrasBundle.get("extra")!=null) {
 				extras = extrasBundle.get("extra").toString();
 			}
-			
+
 			if (extras!=null) {
 				i.putExtra("extra", extras);
 			}
 
 			JSONObject notificationSound = new JSONObject(extras);
 
-			Log.d(LOG_TAG, "wakeuptimer extras[" + extras + "]>" + notificationSound.getString("sound") + notificationSound.getString("message"));
+			Log.d(LOG_TAG, "wakeuptimer extras[" + extras + "]>" + notificationSound.getString("sound") + notificationSound.getString("message") + notificationSound.getString("streamurl"));
 
 			// try to get the audio
 
-			AudioManager am = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
+			AudioManager am = (AudioManager) localContext.getSystemService(Context.AUDIO_SERVICE);
 			// Request audio focus for playback
 			int result = am.requestAudioFocus(new AudioManager.OnAudioFocusChangeListener() {
 												  @Override
@@ -81,14 +85,14 @@ public class WakeupReceiver extends BroadcastReceiver {
 			if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
 				// am.registerMediaButtonEventReceiver(RemoteControlReceiver); //do we even need that?
 				// Start playback
-				PackageManager pm=context.getPackageManager();
+				PackageManager pm=localContext.getPackageManager();
 				ApplicationInfo applicationInfo=pm.getApplicationInfo(packageName,PackageManager.GET_META_DATA);
 				Resources resources=pm.getResourcesForApplication(applicationInfo);
 				int appIconResId=applicationInfo.icon;
 				//Bitmap appIconBitmap=BitmapFactory.decodeResource(resources,appIconResId);
 
 				NotificationCompat.Builder builder = new NotificationCompat.Builder(
-						context).setSmallIcon(appIconResId)
+						localContext).setSmallIcon(appIconResId)
 						.setContentTitle(notificationSound.getString("message")).setAutoCancel(true);
 				Uri alarmSound = Uri.parse(notificationSound.getString("sound"));
 
@@ -96,25 +100,67 @@ public class WakeupReceiver extends BroadcastReceiver {
 
 				Log.d(LOG_TAG, "notificationId " + notificationId);
 
-				builder.setSound(alarmSound);
+				//builder.setSound(alarmSound);
 				//Intent notificationIntent = new Intent(context, WakeupReceiver.class);
 				// contentIntent must redirect to App
 				//PendingIntent contentIntent = PendingIntent.getActivity(context, 0, notificationIntent,
 				//		PendingIntent.FLAG_UPDATE_CURRENT);
 
-				Intent mainIntent = new Intent(context, Class.forName(packageName+".MainActivity"));
+				Intent mainIntent = new Intent(localContext, Class.forName(packageName+".MainActivity"));
 				mainIntent.setAction(MAIN_ACTION);
 				mainIntent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
 				//PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, mainIntent, 0);
-				PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, mainIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+				PendingIntent pendingIntent = PendingIntent.getActivity(localContext, 0, mainIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
 				builder.setContentIntent(pendingIntent);
 				NotificationManager manager = (NotificationManager)
-						context.getSystemService(Context.NOTIFICATION_SERVICE);
+						localContext.getSystemService(Context.NOTIFICATION_SERVICE);
 				manager.notify(notificationId, builder.build());
 
+				if(!isMyServiceRunning(AudioPlayerService.class)){
+					Thread.sleep(10*1000);
+				}
+
+				// create a separate Media player
+				MediaPlayer mp = MediaPlayer.create(localContext,alarmSound);
+
+				Log.d(LOG_TAG,"MediaPlayer.create(localContext,alarmSound);");
+
+				mp.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+
+					@Override
+					public void onCompletion(MediaPlayer mp) {
+						Log.d(LOG_TAG,"OnCompletionListener: sound played");
+
+						startStream(localContext);
+
+					}
+
+				});
+
+				mp.setOnSeekCompleteListener(new MediaPlayer.OnSeekCompleteListener() {
+
+					@Override
+					public void onSeekComplete(MediaPlayer mp) {
+						Log.d(LOG_TAG,"OnSeekCompleteListener: sound played");
+					}
+				});
+
+				mp.setOnErrorListener(new MediaPlayer.OnErrorListener() {
+
+					@Override
+					public boolean onError(MediaPlayer mp, int what, int extra) {
+						Log.d(LOG_TAG,"OnErrorListener: sound not played");
+						return false;
+					}
+
+				});
+
+				mp.start();
+
+
 			}
-			
+
 			i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 			context.startActivity(i);
 
@@ -126,20 +172,20 @@ public class WakeupReceiver extends BroadcastReceiver {
 				}
 				PluginResult pluginResult = new PluginResult(PluginResult.Status.OK, o);
 				pluginResult.setKeepCallback(true);
-				WakeupPlugin.connectionCallbackContext.sendPluginResult(pluginResult);  
+				WakeupPlugin.connectionCallbackContext.sendPluginResult(pluginResult);
 			}
-			
+
 			if (extrasBundle!=null && extrasBundle.getString("type")!=null && extrasBundle.getString("type").equals("daylist")) {
 				// repeat in one week
 				Date next = new Date(new Date().getTime() + (7 * 24 * 60 * 60 * 1000));
 				Log.d(LOG_TAG,"resetting alarm at " + sdf.format(next));
-	
+
 				Intent reschedule = new Intent(context, WakeupReceiver.class);
 				if (extras!=null) {
 					reschedule.putExtra("extra", intent.getExtras().get("extra").toString());
 				}
 				reschedule.putExtra("day", WakeupPlugin.daysOfWeek.get(intent.getExtras().get("day")));
-	
+
 				PendingIntent sender = PendingIntent.getBroadcast(context, 19999 + WakeupPlugin.daysOfWeek.get(intent.getExtras().get("day")), intent, PendingIntent.FLAG_UPDATE_CURRENT);
 				AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
 				if (Build.VERSION.SDK_INT>=19) {
@@ -155,6 +201,33 @@ public class WakeupReceiver extends BroadcastReceiver {
 			e.printStackTrace();
 		} catch (PackageManager.NameNotFoundException e) {
 			e.printStackTrace();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
 		}
 	}
+
+	private void startStream(Context context) {
+
+		//hardcoded for testing purposes
+		String playbackUrl = "http://ndr-n-joy-mp3.akacast.akamaistream.net/7/665/273752/v1/gnl.akacast.akamaistream.net/ndr_n-joy_mp3";
+
+		Intent startIntent = new Intent(context, AudioPlayerService.class);
+		startIntent.setAction(AudioPlayerService.START_SERVICE_PLAY_ACTION);
+		startIntent.putExtra(AudioPlayerService.URL_EXTRA, playbackUrl);
+		startIntent.putExtra(AudioPlayerService.NOTIFICATION_INTENT_CLASS_EXTRA, context.getClass().getName());
+		//mFrequencyCallbackContext = callbackContext;
+		context.startService(startIntent);
+
+	}
+
+	private boolean isMyServiceRunning(Class<?> serviceClass) {
+		ActivityManager manager = (ActivityManager) localContext.getSystemService(Context.ACTIVITY_SERVICE);
+		for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
+			if (serviceClass.getName().equals(service.service.getClassName())) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 }
