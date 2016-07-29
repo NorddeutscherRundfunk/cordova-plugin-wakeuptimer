@@ -34,6 +34,7 @@ public class WakeupReceiver extends BroadcastReceiver {
 	public static final String MAIN_ACTION = "ACTION MAIN";
 
 	private Context localContext;
+	private String localUrl;
 
 	@SuppressLint({ "SimpleDateFormat", "NewApi" })
 	@Override
@@ -100,6 +101,7 @@ public class WakeupReceiver extends BroadcastReceiver {
 				String streamUrl = notificationSound.getString("streamurl");
 
 				Log.d(LOG_TAG, "notificationId " + notificationId + " stream@"+ streamUrl);
+				localUrl = streamUrl;
 
 				//builder.setSound(alarmSound);
 				//Intent notificationIntent = new Intent(context, WakeupReceiver.class);
@@ -133,7 +135,7 @@ public class WakeupReceiver extends BroadcastReceiver {
 					public void onCompletion(MediaPlayer mp) {
 						Log.d(LOG_TAG,"OnCompletionListener: sound played");
 
-						startStream(localContext);
+						startStream(localContext, localUrl);
 
 					}
 
@@ -207,10 +209,10 @@ public class WakeupReceiver extends BroadcastReceiver {
 		}
 	}
 
-	private void startStream(Context context) {
+	private void startStream(Context context, String toBeStreamedUrl) {
 
 		//hardcoded for testing purposes
-		String playbackUrl = "http://ndr-n-joy-mp3.akacast.akamaistream.net/7/665/273752/v1/gnl.akacast.akamaistream.net/ndr_n-joy_mp3";
+		String playbackUrl = toBeStreamedUrl;
 
 		Intent startIntent = new Intent(context, AudioPlayerService.class);
 		startIntent.setAction(AudioPlayerService.START_SERVICE_PLAY_ACTION);
