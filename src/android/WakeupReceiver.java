@@ -35,6 +35,7 @@ public class WakeupReceiver extends BroadcastReceiver {
 
 	private Context localContext;
 	private String localUrl;
+	private int duration;
 
 	@SuppressLint({ "SimpleDateFormat", "NewApi" })
 	@Override
@@ -123,15 +124,27 @@ public class WakeupReceiver extends BroadcastReceiver {
 				// wait duration of jingle and then start stream
 				// TODO:
 
-				Log.d(LOG_TAG,"Duration: "+Integer.parseInt(notificationSound.getString("duration")));
+				this.duration = Integer.parseInt(notificationSound.getString("duration"))
 
-				Thread.sleep(Integer.parseInt(notificationSound.getString("duration"))*1000);
+				new Thread(new Runnable() {
+					public void run() {
+				Log.d(LOG_TAG,"Duration: "+duration);
+
+						try {
+							Thread.sleep(duration*1000);
+						} catch (InterruptedException e) {
+							e.printStackTrace();
+						}
+						startStream(localContext, localUrl);
+
+					}
+				}).start();
+
 
 //				if(!isMyServiceRunning(AudioPlayerService.class)){
 //					Thread.sleep(10*1000);
 //				}
 
-				startStream(localContext, localUrl);
 
 //				// create a separate Media player
 //				MediaPlayer mp = MediaPlayer.create(localContext,alarmSound);
