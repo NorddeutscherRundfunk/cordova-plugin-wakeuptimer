@@ -124,7 +124,7 @@ public class WakeupReceiver extends BroadcastReceiver {
 				// wait duration of jingle and then start stream
 				// TODO:
 
-				this.duration = Integer.parseInt(notificationSound.getString("duration"))
+				this.duration = Integer.parseInt(notificationSound.getString("duration"));
 
 				new Thread(new Runnable() {
 					public void run() {
