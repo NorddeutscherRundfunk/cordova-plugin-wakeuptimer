@@ -103,7 +103,7 @@ public class WakeupReceiver extends BroadcastReceiver {
 				Log.d(LOG_TAG, "notificationId " + notificationId + " stream@"+ streamUrl);
 				localUrl = streamUrl;
 
-				//builder.setSound(alarmSound);
+				builder.setSound(alarmSound);
 				//Intent notificationIntent = new Intent(context, WakeupReceiver.class);
 				// contentIntent must redirect to App
 				//PendingIntent contentIntent = PendingIntent.getActivity(context, 0, notificationIntent,
@@ -120,46 +120,55 @@ public class WakeupReceiver extends BroadcastReceiver {
 						localContext.getSystemService(Context.NOTIFICATION_SERVICE);
 				manager.notify(notificationId, builder.build());
 
-				if(!isMyServiceRunning(AudioPlayerService.class)){
-					Thread.sleep(10*1000);
-				}
+				// wait duration of jingle and then start stream
+				// TODO:
 
-				// create a separate Media player
-				MediaPlayer mp = MediaPlayer.create(localContext,alarmSound);
+				Log.d(LOG_TAG,"Duration: "+Integer.parseInt(notificationSound.getString("duration")));
 
-				Log.d(LOG_TAG,"MediaPlayer.create(localContext,alarmSound);");
+				Thread.sleep(Integer.parseInt(notificationSound.getString("duration"))*1000);
 
-				mp.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+//				if(!isMyServiceRunning(AudioPlayerService.class)){
+//					Thread.sleep(10*1000);
+//				}
 
-					@Override
-					public void onCompletion(MediaPlayer mp) {
-						Log.d(LOG_TAG,"OnCompletionListener: sound played");
+				startStream(localContext, localUrl);
 
-						startStream(localContext, localUrl);
-
-					}
-
-				});
-
-				mp.setOnSeekCompleteListener(new MediaPlayer.OnSeekCompleteListener() {
-
-					@Override
-					public void onSeekComplete(MediaPlayer mp) {
-						Log.d(LOG_TAG,"OnSeekCompleteListener: sound played");
-					}
-				});
-
-				mp.setOnErrorListener(new MediaPlayer.OnErrorListener() {
-
-					@Override
-					public boolean onError(MediaPlayer mp, int what, int extra) {
-						Log.d(LOG_TAG,"OnErrorListener: sound not played");
-						return false;
-					}
-
-				});
-
-				mp.start();
+//				// create a separate Media player
+//				MediaPlayer mp = MediaPlayer.create(localContext,alarmSound);
+//
+//				Log.d(LOG_TAG,"MediaPlayer.create(localContext,alarmSound);");
+//
+//				mp.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+//
+//					@Override
+//					public void onCompletion(MediaPlayer mp) {
+//						Log.d(LOG_TAG,"OnCompletionListener: sound played");
+//
+//						startStream(localContext, localUrl);
+//
+//					}
+//
+//				});
+//
+//				mp.setOnSeekCompleteListener(new MediaPlayer.OnSeekCompleteListener() {
+//
+//					@Override
+//					public void onSeekComplete(MediaPlayer mp) {
+//						Log.d(LOG_TAG,"OnSeekCompleteListener: sound played");
+//					}
+//				});
+//
+//				mp.setOnErrorListener(new MediaPlayer.OnErrorListener() {
+//
+//					@Override
+//					public boolean onError(MediaPlayer mp, int what, int extra) {
+//						Log.d(LOG_TAG,"OnErrorListener: sound not played");
+//						return false;
+//					}
+//
+//				});
+//
+//				mp.start();
 
 
 			}
