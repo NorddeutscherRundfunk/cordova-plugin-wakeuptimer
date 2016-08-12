@@ -226,8 +226,6 @@ public class WakeupReceiver extends BroadcastReceiver {
 			e.printStackTrace();
 		} catch (PackageManager.NameNotFoundException e) {
 			e.printStackTrace();
-		} catch (InterruptedException e) {
-			e.printStackTrace();
 		}
 	}
 
