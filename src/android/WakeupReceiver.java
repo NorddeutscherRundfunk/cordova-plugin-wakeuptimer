@@ -105,10 +105,13 @@ public class WakeupReceiver extends BroadcastReceiver {
 				localUrl = streamUrl;
 
 				builder.setSound(alarmSound);
-				//Intent notificationIntent = new Intent(context, WakeupReceiver.class);
+				Intent notificationIntent = new Intent(context, WakeupClickActivity.class);
+
+				notificationIntent.putExtra("streamurl",localUrl);
+
 				// contentIntent must redirect to App
-				//PendingIntent contentIntent = PendingIntent.getActivity(context, 0, notificationIntent,
-				//		PendingIntent.FLAG_UPDATE_CURRENT);
+				PendingIntent contentIntent = PendingIntent.getActivity(localContext, 0, notificationIntent,
+						PendingIntent.FLAG_UPDATE_CURRENT);
 
 				Intent mainIntent = new Intent(localContext, Class.forName(packageName+".MainActivity"));
 				mainIntent.setAction(MAIN_ACTION);
@@ -116,7 +119,7 @@ public class WakeupReceiver extends BroadcastReceiver {
 				//PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, mainIntent, 0);
 				PendingIntent pendingIntent = PendingIntent.getActivity(localContext, 0, mainIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
-				builder.setContentIntent(pendingIntent);
+				builder.setContentIntent(contentIntent);
 				NotificationManager manager = (NotificationManager)
 						localContext.getSystemService(Context.NOTIFICATION_SERVICE);
 				manager.notify(notificationId, builder.build());
@@ -139,50 +142,6 @@ public class WakeupReceiver extends BroadcastReceiver {
 
 					}
 				}).start();
-
-
-//				if(!isMyServiceRunning(AudioPlayerService.class)){
-//					Thread.sleep(10*1000);
-//				}
-
-
-//				// create a separate Media player
-//				MediaPlayer mp = MediaPlayer.create(localContext,alarmSound);
-//
-//				Log.d(LOG_TAG,"MediaPlayer.create(localContext,alarmSound);");
-//
-//				mp.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-//
-//					@Override
-//					public void onCompletion(MediaPlayer mp) {
-//						Log.d(LOG_TAG,"OnCompletionListener: sound played");
-//
-//						startStream(localContext, localUrl);
-//
-//					}
-//
-//				});
-//
-//				mp.setOnSeekCompleteListener(new MediaPlayer.OnSeekCompleteListener() {
-//
-//					@Override
-//					public void onSeekComplete(MediaPlayer mp) {
-//						Log.d(LOG_TAG,"OnSeekCompleteListener: sound played");
-//					}
-//				});
-//
-//				mp.setOnErrorListener(new MediaPlayer.OnErrorListener() {
-//
-//					@Override
-//					public boolean onError(MediaPlayer mp, int what, int extra) {
-//						Log.d(LOG_TAG,"OnErrorListener: sound not played");
-//						return false;
-//					}
-//
-//				});
-//
-//				mp.start();
-
 
 			}
 
