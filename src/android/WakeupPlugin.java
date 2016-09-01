@@ -152,6 +152,9 @@ public class WakeupPlugin extends CordovaPlugin {
 			JSONObject time=alarm.getJSONObject("time");
 			
 			if ( type.equals("onetime")) {
+
+				Log.d(LOG_TAG,"onetime");
+
 				Calendar alarmDate=getOneTimeAlarmDate(time);
 				Intent intent = new Intent(context, WakeupReceiver.class);
 				if(alarm.has("extra")){
@@ -162,6 +165,9 @@ public class WakeupPlugin extends CordovaPlugin {
 				setNotification(context, type, alarmDate, intent, ID_ONETIME_OFFSET);
 				
 			} else if ( type.equals("daylist") ) {
+
+				Log.d(LOG_TAG,"daylist");
+
 				JSONArray days=alarm.getJSONArray("days");
 				
 				for (int j=0;j<days.length();j++){
@@ -177,6 +183,9 @@ public class WakeupPlugin extends CordovaPlugin {
 					setNotification(context, type, alarmDate, intent, ID_DAYLIST_OFFSET + daysOfWeek.get(days.getString(j)));
 				}
 			} else if ( type.equals("snooze") ) {
+
+				Log.d(LOG_TAG,"snooze");
+
 				cancelSnooze(context);
 				Calendar alarmDate=getTimeFromNow(time);
 				Intent intent = new Intent(context, WakeupReceiver.class);
@@ -215,7 +224,14 @@ public class WakeupPlugin extends CordovaPlugin {
 				PluginResult pluginResult = new PluginResult(PluginResult.Status.OK, o);
 				pluginResult.setKeepCallback(true);
 				WakeupPlugin.connectionCallbackContext.sendPluginResult(pluginResult);  
+			} else {
+
+				Log.d(LOG_TAG,"WakeupPlugin.connectionCallbackContext==null");
+
 			}
+
+			listAlarms(context);
+
 		}
 	}
 	
@@ -366,6 +382,19 @@ public class WakeupPlugin extends CordovaPlugin {
 			}
 		}
 
+	}
+
+
+	private static void listAlarms(Context context) {
+		if (Build.VERSION.SDK_INT>=21) {
+			AlarmManager mAlarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
+			for (AlarmManager.AlarmClockInfo aci = mAlarmManager.getNextAlarmClock();
+				 aci != null;
+				 aci = mAlarmManager.getNextAlarmClock()) {
+				Log.d(LOG_TAG, aci.getShowIntent().toString());
+				Log.d(LOG_TAG, String.format("Trigger time: %d", aci.getTriggerTime()));
+			}
+		}
 	}
 
 }
