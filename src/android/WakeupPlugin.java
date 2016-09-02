@@ -68,6 +68,7 @@ public class WakeupPlugin extends CordovaPlugin {
 		boolean ret=true;
 		try {
 			if(action.equalsIgnoreCase("wakeup")) {
+				Log.d(LOG_TAG, "scheduling alarm...");
 				JSONObject options=args.getJSONObject(0);
 
 				JSONArray alarms;
@@ -92,11 +93,17 @@ public class WakeupPlugin extends CordovaPlugin {
 					JSONArray alarms = options.getJSONArray("alarms");
 					setAlarms(cordova.getActivity().getApplicationContext(), alarms, false);
 				}
-						
+
 				WakeupPlugin.connectionCallbackContext = callbackContext;
 				PluginResult pluginResult = new PluginResult(PluginResult.Status.OK);
 				pluginResult.setKeepCallback(true);
-				callbackContext.sendPluginResult(pluginResult);  
+				callbackContext.sendPluginResult(pluginResult);
+			}else if(action.equalsIgnoreCase("cancel")) {
+				Log.d(LOG_TAG, "canceling alarm...");
+				JSONObject options=args.getJSONObject(0);
+
+				cancelAlarms(cordova.getActivity().getApplicationContext());
+
 			}else{
 				PluginResult pluginResult = new PluginResult(PluginResult.Status.ERROR, LOG_TAG + " error: invalid action (" + action + ")");
 				pluginResult.setKeepCallback(true);
@@ -108,11 +115,13 @@ public class WakeupPlugin extends CordovaPlugin {
 			pluginResult.setKeepCallback(true);
 			callbackContext.sendPluginResult(pluginResult);  
 			ret = false;
+			e.printStackTrace();
 		} catch (Exception e) {
 			PluginResult pluginResult = new PluginResult(PluginResult.Status.ERROR, LOG_TAG + " error: " + e.getMessage());
 			pluginResult.setKeepCallback(true);
 			callbackContext.sendPluginResult(pluginResult);  
 			ret = false;
+			e.printStackTrace();
 		}
 		return ret;
 	}

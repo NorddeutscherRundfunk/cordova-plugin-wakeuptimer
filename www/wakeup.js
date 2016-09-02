@@ -13,4 +13,8 @@ Wakeup.prototype.snooze = function(success, error, options) {
     exec(success, error, "WakeupPlugin", "snooze", [options]);
 };
 
+Wakeup.prototype.cancel = function(success, error, options) {
+    exec(success, error, "WakeupPlugin", "cancel", [options]);
+};
+
 module.exports = new Wakeup();
