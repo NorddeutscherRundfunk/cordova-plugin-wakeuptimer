@@ -138,7 +138,8 @@ public class WakeupReceiver extends BroadcastReceiver {
 						} catch (InterruptedException e) {
 							e.printStackTrace();
 						}
-						startStream(localContext, localUrl);
+						//startStream(localContext, localUrl);
+						WakeupPlugin.fireEvent("please start the stream :)");
 
 					}
 				}).start();
