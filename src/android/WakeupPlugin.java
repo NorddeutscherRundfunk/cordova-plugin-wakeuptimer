@@ -98,6 +98,13 @@ public class WakeupPlugin extends CordovaPlugin {
 				PluginResult pluginResult = new PluginResult(PluginResult.Status.OK);
 				pluginResult.setKeepCallback(true);
 				callbackContext.sendPluginResult(pluginResult);
+			}else if(action.equalsIgnoreCase("getup")) {
+
+				WakeupPlugin.connectionCallbackContext = callbackContext;
+				PluginResult pluginResult = new PluginResult(PluginResult.Status.OK);
+				pluginResult.setKeepCallback(true);
+				callbackContext.sendPluginResult(pluginResult);
+
 			}else if(action.equalsIgnoreCase("cancel")) {
 				Log.d(LOG_TAG, "canceling alarm...");
 				JSONObject options=args.getJSONObject(0);
