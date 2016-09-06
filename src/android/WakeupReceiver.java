@@ -48,22 +48,24 @@ public class WakeupReceiver extends BroadcastReceiver {
 			String packageName = localContext.getPackageName();
 			Intent launchIntent = localContext.getPackageManager().getLaunchIntentForPackage(packageName);
 			String className = launchIntent.getComponent().getClassName();
-			Log.d(LOG_TAG, "launching activity for class " + className);
+			//Log.d(LOG_TAG, "launching activity for class " + className);
 
-			@SuppressWarnings("rawtypes")
-			Class c = Class.forName(className);
+			//@SuppressWarnings("rawtypes")
+			//Class c = Class.forName(className);
 
-			Intent i = new Intent(localContext, c);
-			i.putExtra("wakeup", true);
+			//Intent i = new Intent(localContext, c);
+			//i.putExtra("wakeup", true);
 			Bundle extrasBundle = intent.getExtras();
 			String extras=null;
 			if (extrasBundle!=null && extrasBundle.get("extra")!=null) {
 				extras = extrasBundle.get("extra").toString();
 			}
 
+			/*
 			if (extras!=null) {
 				i.putExtra("extra", extras);
 			}
+			*/
 
 			JSONObject notificationSound = new JSONObject(extras);
 
@@ -147,7 +149,7 @@ public class WakeupReceiver extends BroadcastReceiver {
 			}
 
 			i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-			context.startActivity(i);
+			//context.startActivity(i);
 
 			if(WakeupPlugin.connectionCallbackContext!=null) {
 				JSONObject o=new JSONObject();
