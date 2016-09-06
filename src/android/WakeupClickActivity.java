@@ -37,7 +37,7 @@ public class WakeupClickActivity extends Activity {
 
         Log.d(TAG,"notification click received for [" + streamurl + "]");
 
-        startStream(localContext, streamurl);
+        //startStream(localContext, streamurl);
 
         WakeupPlugin.fireEvent("clickedOnAlarmNotification");
 
