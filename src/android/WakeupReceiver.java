@@ -148,7 +148,7 @@ public class WakeupReceiver extends BroadcastReceiver {
 
 			}
 
-			i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+			//i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 			//context.startActivity(i);
 
 			if(WakeupPlugin.connectionCallbackContext!=null) {
