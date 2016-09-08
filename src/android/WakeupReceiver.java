@@ -78,7 +78,7 @@ public class WakeupReceiver extends BroadcastReceiver {
 			int result = am.requestAudioFocus(new AudioManager.OnAudioFocusChangeListener() {
 												  @Override
 												  public void onAudioFocusChange(int focusChange) {
-													  Log.d(LOG_TAG, "onAudioFocusChange");
+													  Log.d(LOG_TAG, "onAudioFocusChange" + focusChange);
 												  }
 											  },
 					// Use the music stream.
@@ -107,9 +107,23 @@ public class WakeupReceiver extends BroadcastReceiver {
 				localUrl = streamUrl;
 
 				builder.setSound(alarmSound);
-				Intent notificationIntent = new Intent(context, WakeupClickActivity.class);
+				//Intent notificationIntent = new Intent(context, WakeupClickActivity.class);
+//				Intent notificationIntent = new Intent(context, Class.forName(packageName+".MainActivity"));
+//				notificationIntent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+
+
+
+				String pkgName  = context.getPackageName();
+
+				Intent notificationIntent = context
+						.getPackageManager()
+						.getLaunchIntentForPackage(pkgName);
+
+				notificationIntent.addFlags(
+						Intent.FLAG_ACTIVITY_REORDER_TO_FRONT | Intent.FLAG_ACTIVITY_SINGLE_TOP);
 
 				notificationIntent.putExtra("streamurl",localUrl);
+				notificationIntent.putExtra("playStream","true");
 
 				// contentIntent must redirect to App
 				PendingIntent contentIntent = PendingIntent.getActivity(localContext, 0, notificationIntent,
@@ -119,7 +133,7 @@ public class WakeupReceiver extends BroadcastReceiver {
 				mainIntent.setAction(MAIN_ACTION);
 				mainIntent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
 				//PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, mainIntent, 0);
-				PendingIntent pendingIntent = PendingIntent.getActivity(localContext, 0, mainIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+				//PendingIntent pendingIntent = PendingIntent.getActivity(localContext, 0, mainIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
 				builder.setContentIntent(contentIntent);
 				NotificationManager manager = (NotificationManager)
@@ -189,20 +203,6 @@ public class WakeupReceiver extends BroadcastReceiver {
 		} catch (PackageManager.NameNotFoundException e) {
 			e.printStackTrace();
 		}
-	}
-
-	private void startStream(Context context, String toBeStreamedUrl) {
-
-		//hardcoded for testing purposes
-		String playbackUrl = toBeStreamedUrl;
-
-		Intent startIntent = new Intent(context, AudioPlayerService.class);
-		startIntent.setAction(AudioPlayerService.START_SERVICE_PLAY_ACTION);
-		startIntent.putExtra(AudioPlayerService.URL_EXTRA, playbackUrl);
-		startIntent.putExtra(AudioPlayerService.NOTIFICATION_INTENT_CLASS_EXTRA, context.getClass().getName());
-		//mFrequencyCallbackContext = callbackContext;
-		context.startService(startIntent);
-
 	}
 
 	private boolean isMyServiceRunning(Class<?> serviceClass) {

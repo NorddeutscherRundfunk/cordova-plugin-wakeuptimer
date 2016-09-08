@@ -52,6 +52,22 @@ public class WakeupPlugin extends CordovaPlugin {
 
 	public static CallbackContext connectionCallbackContext;
 
+
+
+	public void onNewIntent(Intent intent) {
+		String playStream="";
+
+		Log.d(LOG_TAG, "onNewIntent: " + intent);
+		playStream = intent.getStringExtra("playStream");
+
+		if(playStream.equals("true")){
+
+			Log.d(LOG_TAG,"Starting stream from Wakeupplugin");
+			WakeupPlugin.fireEvent("please start the stream :)");
+		}
+
+	}
+
   @Override
   public void onReset() {
 	// app startup
@@ -381,6 +397,9 @@ public class WakeupPlugin extends CordovaPlugin {
 	 *      The event name
 	 */
 	static void fireEvent (String event) {
+
+
+		Log.d(LOG_TAG, "Firing event: [" + event + "]");
 
 		if(WakeupPlugin.connectionCallbackContext != null) {
 			try {
