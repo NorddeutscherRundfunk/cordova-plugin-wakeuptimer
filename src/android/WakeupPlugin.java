@@ -60,11 +60,14 @@ public class WakeupPlugin extends CordovaPlugin {
 		Log.d(LOG_TAG, "onNewIntent: " + intent);
 		playStream = intent.getStringExtra("playStream");
 
-		if(playStream.equals("true")){
+		if(playStream != null){
+			if(playStream.equals("true")){
 
-			Log.d(LOG_TAG,"Starting stream from Wakeupplugin");
-			WakeupPlugin.fireEvent("please start the stream :)");
+				Log.d(LOG_TAG,"Starting stream from Wakeupplugin");
+				WakeupPlugin.fireEvent("please start the stream :)");
+			}
 		}
+
 
 	}
 
