@@ -75,10 +75,10 @@ public class WakeupPlugin extends CordovaPlugin {
   public void onReset() {
 	// app startup
     Log.d(LOG_TAG, "Wakeup Plugin onReset");
-    Bundle extras = cordova.getActivity().getIntent().getExtras();
-    if (extras!=null && !extras.getBoolean("wakeup", false)) {
-      setAlarmsFromPrefs( cordova.getActivity().getApplicationContext() );
-    }
+//    Bundle extras = cordova.getActivity().getIntent().getExtras();
+//    if (extras!=null && !extras.getBoolean("wakeup", false)) {
+//      setAlarmsFromPrefs( cordova.getActivity().getApplicationContext() );
+//    }
     super.onReset();
   }
 
@@ -196,7 +196,9 @@ public class WakeupPlugin extends CordovaPlugin {
 					intent.putExtra("extra", alarm.getJSONObject("extra").toString());
 					intent.putExtra("type", type);
 				}
-				
+
+				Log.d(LOG_TAG, "Setting Notification to: " + alarmDate);
+
 				setNotification(context, type, alarmDate, intent, ID_ONETIME_OFFSET);
 				
 			} else if ( type.equals("daylist") ) {
@@ -389,6 +391,9 @@ public class WakeupPlugin extends CordovaPlugin {
 		prefs = PreferenceManager.getDefaultSharedPreferences(context);
 		editor = prefs.edit();
 		editor.putString("alarms", alarms.toString());
+
+		Log.d(LOG_TAG,"alarms.toString(): " + alarms.toString());
+
 		editor.commit();
 
 	}
