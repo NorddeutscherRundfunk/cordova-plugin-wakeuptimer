@@ -267,7 +267,7 @@ public class WakeupPlugin extends CordovaPlugin {
 
 			}
 
-			listAlarms(context);
+			//listAlarms(context);
 
 		}
 	}
