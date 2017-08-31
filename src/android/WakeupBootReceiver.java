@@ -1,13 +1,9 @@
 package org.nypr.cordova.wakeupplugin;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
-
 import android.annotation.SuppressLint;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.util.Log;
 
 public class WakeupBootReceiver extends BroadcastReceiver {
 

@@ -1,12 +1,5 @@
 package org.nypr.cordova.wakeupplugin;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
-
-import org.apache.cordova.PluginResult;
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import android.annotation.SuppressLint;
 import android.app.ActivityManager;
 import android.app.AlarmManager;
@@ -19,14 +12,17 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.media.AudioManager;
-import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
+import org.apache.cordova.PluginResult;
+import org.json.JSONException;
+import org.json.JSONObject;
 
-import de.ndr.audioplugin.AudioPlayerService;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 public class WakeupReceiver extends BroadcastReceiver {
 
