@@ -8,6 +8,8 @@ import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.res.Resources;
+import android.media.AudioAttributes;
+import android.media.AudioFocusRequest;
 import android.media.AudioManager;
 import android.net.Uri;
 import android.os.Build;
@@ -28,19 +30,19 @@ public class WakeupReceiver extends BroadcastReceiver {
     private static final String TAG = "WakeupReceiver";
     public static final String MAIN_ACTION = "ACTION MAIN";
 
-    private Context localContext;
+    private Context context;
     private int duration;
 
     @SuppressLint({"SimpleDateFormat", "NewApi"})
     @Override
-    public void onReceive(Context context, Intent intent) {
-        localContext = context;
+    public void onReceive(Context aContext, Intent intent) {
+        context = aContext;
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.GERMANY);
         Log.d(TAG, "wakeuptimer expired at " + sdf.format(new Date().getTime()));
 
         try {
-            String packageName = localContext.getPackageName();
-            Intent launchIntent = localContext.getPackageManager().getLaunchIntentForPackage(packageName);
+            String packageName = context.getPackageName();
+            Intent launchIntent = context.getPackageManager().getLaunchIntentForPackage(packageName);
             String className = launchIntent.getComponent().getClassName();
             Bundle extrasBundle = intent.getExtras();
             String extras = null;
@@ -54,10 +56,9 @@ public class WakeupReceiver extends BroadcastReceiver {
 
             // try to get the audio
 
-            AudioManager am = (AudioManager) localContext.getSystemService(Context.AUDIO_SERVICE);
+            AudioManager am = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
             // Request audio focus for playback
-            int result =
-                    am.requestAudioFocus(new AudioManager.OnAudioFocusChangeListener() {
+            int result = am.requestAudioFocus(new AudioManager.OnAudioFocusChangeListener() {
                                              @Override
                                              public void onAudioFocusChange(int focusChange) {
                                                  Log.d(TAG, "onAudioFocusChange" + focusChange);
@@ -67,17 +68,31 @@ public class WakeupReceiver extends BroadcastReceiver {
                             AudioManager.STREAM_MUSIC,
                             // Request permanent focus.
                             AudioManager.AUDIOFOCUS_GAIN);
-  /*
-    am.requestAudioFocus(new AudioFocusRequest.Builder(AudioManager.STREAM_MUSIC).setOnAudioFocusChangeListener(new AudioManager.OnAudioFocusChangeListener() {
-                        @Override
-                        public void onAudioFocusChange(int focusChange) {
-                            Log.d(TAG, "onAudioFocusChange" + focusChange);
-                        }
-                    }).setFocusGain(AudioManager.AUDIOFOCUS_GAIN).build());
-*/
+
+                    /*
+                    // FATAL EXCEPTION:   java.lang.NoClassDefFoundError: Failed resolution of: Landroid/media/AudioFocusRequest$Builder;
+
+                    am.requestAudioFocus(
+                            new AudioFocusRequest
+                                    .Builder(AudioManager.STREAM_MUSIC)
+                                    .setAudioAttributes(new AudioAttributes
+                                            .Builder()
+                                            .setUsage(AudioAttributes.USAGE_ALARM)
+                                            .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                                            .build())
+                                    .setOnAudioFocusChangeListener(
+                                            new AudioManager.OnAudioFocusChangeListener() {
+                                                @Override
+                                                public void onAudioFocusChange(int focusChange) {
+                                                    Log.d(TAG, "onAudioFocusChange" + focusChange);
+                                                }
+                                            })
+                                    .setFocusGain(AudioManager.AUDIOFOCUS_GAIN)
+                                    .build()
+                    );*/
 
             if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
-                PackageManager pm = localContext.getPackageManager();
+                PackageManager pm = context.getPackageManager();
                 ApplicationInfo applicationInfo = pm.getApplicationInfo(packageName, PackageManager.GET_META_DATA);
                 Resources resources = pm.getResourcesForApplication(applicationInfo);
                 int appIconResId = applicationInfo.icon;
@@ -91,7 +106,7 @@ public class WakeupReceiver extends BroadcastReceiver {
                 String localUrl = streamUrl;
 
                 NotificationManager manager = (NotificationManager)
-                        localContext.getSystemService(Context.NOTIFICATION_SERVICE);
+                        context.getSystemService(Context.NOTIFICATION_SERVICE);
 
                 Notification notification = buildNotification(
                         notificationSound.getString("message"),
@@ -119,7 +134,7 @@ public class WakeupReceiver extends BroadcastReceiver {
                         } catch (InterruptedException e) {
                             e.printStackTrace();
                         }
-                        //startStream(localContext, localUrl);
+                        //startStream(context, localUrl);
                         WakeupPlugin.fireEvent("please start the stream :)");
 
                     }
@@ -170,8 +185,8 @@ public class WakeupReceiver extends BroadcastReceiver {
     @NonNull
     private Notification buildNotification(String message, int appIconResId, Uri alarmSound, PendingIntent contentIntent) throws JSONException {
 
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(localContext, "org.nypr.cordova.wakeupplugin." + TAG)
-                .setSmallIcon(appIconResId)
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(context, "org.nypr.cordova.wakeupplugin." + TAG)
+                .setSmallIcon(getResourceId("ic_fa_bell", "drawable"))
                 .setContentTitle(message)
                 .setAutoCancel(true);
 
@@ -191,19 +206,23 @@ public class WakeupReceiver extends BroadcastReceiver {
         notificationIntent.putExtra("playStream", "true");
 
         // contentIntent must redirect to App
-        PendingIntent contentIntent = PendingIntent.getActivity(localContext, 0, notificationIntent,
+        PendingIntent contentIntent = PendingIntent.getActivity(context, 0, notificationIntent,
                 PendingIntent.FLAG_UPDATE_CURRENT);
 
-        Intent mainIntent = new Intent(localContext, Class.forName(packageName + ".MainActivity"));
+        Intent mainIntent = new Intent(context, Class.forName(packageName + ".MainActivity"));
         mainIntent.setAction(MAIN_ACTION);
         mainIntent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
 
         return contentIntent;
     }
 
+    private int getResourceId(String resName, String type) {
+        Log.d(TAG, "getResourceId() resName = [" + resName + "], type = [" + type + "] packageName = [" + context.getPackageName() + "]");
+        return context.getResources().getIdentifier(resName, type, context.getPackageName());
+    }
 
     private boolean isMyServiceRunning(Class<?> serviceClass) {
-        ActivityManager manager = (ActivityManager) localContext.getSystemService(Context.ACTIVITY_SERVICE);
+        ActivityManager manager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
         for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
             if (serviceClass.getName().equals(service.service.getClassName())) {
                 return true;
