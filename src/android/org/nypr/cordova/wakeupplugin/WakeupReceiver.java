@@ -5,11 +5,6 @@ import android.app.*;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.ApplicationInfo;
-import android.content.pm.PackageManager;
-import android.content.res.Resources;
-import android.media.AudioAttributes;
-import android.media.AudioFocusRequest;
 import android.media.AudioManager;
 import android.net.Uri;
 import android.os.Build;
@@ -38,92 +33,59 @@ public class WakeupReceiver extends BroadcastReceiver {
     public void onReceive(Context aContext, Intent intent) {
         context = aContext;
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.GERMANY);
-        Log.d(TAG, "wakeuptimer expired at " + sdf.format(new Date().getTime()));
+        Log.d(TAG, "onReceive() expired at " + sdf.format(new Date().getTime()));
 
         try {
-            String packageName = context.getPackageName();
-            Intent launchIntent = context.getPackageManager().getLaunchIntentForPackage(packageName);
-            String className = launchIntent.getComponent().getClassName();
+
+
             Bundle extrasBundle = intent.getExtras();
             String extras = null;
             if (extrasBundle != null && extrasBundle.get("extra") != null) {
                 extras = extrasBundle.get("extra").toString();
             }
 
-            JSONObject notificationSound = new JSONObject(extras);
+            Configuration conf = new Configuration(new JSONObject(extras));
 
-            Log.d(TAG, "wakeuptimer extras[" + extras + "]>" + notificationSound.getString("sound") + notificationSound.getString("message") + notificationSound.getString("streamurl"));
+            Log.d(TAG, "onReceive() intent extras[" + extras + "]>" + conf.getSound() + " " + conf.getMessage() + " " + conf.getStreamUrl());
 
             // try to get the audio
 
             AudioManager am = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
             // Request audio focus for playback
             int result = am.requestAudioFocus(new AudioManager.OnAudioFocusChangeListener() {
-                                             @Override
-                                             public void onAudioFocusChange(int focusChange) {
-                                                 Log.d(TAG, "onAudioFocusChange" + focusChange);
-                                             }
-                                         },
-                            // Use the music stream.
-                            AudioManager.STREAM_MUSIC,
-                            // Request permanent focus.
-                            AudioManager.AUDIOFOCUS_GAIN);
-
-                    /*
-                    // FATAL EXCEPTION:   java.lang.NoClassDefFoundError: Failed resolution of: Landroid/media/AudioFocusRequest$Builder;
-
-                    am.requestAudioFocus(
-                            new AudioFocusRequest
-                                    .Builder(AudioManager.STREAM_MUSIC)
-                                    .setAudioAttributes(new AudioAttributes
-                                            .Builder()
-                                            .setUsage(AudioAttributes.USAGE_ALARM)
-                                            .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
-                                            .build())
-                                    .setOnAudioFocusChangeListener(
-                                            new AudioManager.OnAudioFocusChangeListener() {
-                                                @Override
-                                                public void onAudioFocusChange(int focusChange) {
-                                                    Log.d(TAG, "onAudioFocusChange" + focusChange);
-                                                }
-                                            })
-                                    .setFocusGain(AudioManager.AUDIOFOCUS_GAIN)
-                                    .build()
-                    );*/
+                                                  @Override
+                                                  public void onAudioFocusChange(int focusChange) {
+                                                      Log.d(TAG, "OnAudioFocusChangeListener onAudioFocusChange" + focusChange);
+                                                  }
+                                              },
+                    // Use the music stream.
+                    AudioManager.STREAM_MUSIC,
+                    // Request permanent focus.
+                    AudioManager.AUDIOFOCUS_GAIN);
 
             if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
-                PackageManager pm = context.getPackageManager();
-                ApplicationInfo applicationInfo = pm.getApplicationInfo(packageName, PackageManager.GET_META_DATA);
-                Resources resources = pm.getResourcesForApplication(applicationInfo);
-                int appIconResId = applicationInfo.icon;
 
-                Uri alarmSound = Uri.parse(notificationSound.getString("sound"));
-
-                int notificationId = Integer.parseInt(notificationSound.getString("id"));
-                String streamUrl = notificationSound.getString("streamurl");
-
-                Log.d(TAG, "notificationId " + notificationId + " stream@" + streamUrl);
-                String localUrl = streamUrl;
+                Log.d(TAG, "onReceive() notificationId " + conf.getId() + " stream@" + conf.getStreamUrl());
 
                 NotificationManager manager = (NotificationManager)
                         context.getSystemService(Context.NOTIFICATION_SERVICE);
 
                 Notification notification = buildNotification(
-                        notificationSound.getString("message"),
-                        appIconResId,
-                        alarmSound,
+                        conf.getMessage(),
+                        getResourceId("ic_fa_bell", "drawable"),
+                        conf.getSound(),
                         meshIntentsForNotification(
                                 context.getPackageManager().getLaunchIntentForPackage(
                                         context.getPackageName()
                                 ),
-                                localUrl,
-                                packageName
+                                conf.getStreamUrl(),
+                                context.getPackageName()
                         )
                 );
-                manager.notify(notificationId, notification);
+                manager.notify(conf.getId(), notification);
 
                 // wait duration of jingle and then start stream
-                this.duration = Integer.parseInt(notificationSound.getString("duration"));
+                this.duration = conf.getDuration();
 
                 new Thread(new Runnable() {
                     public void run() {
@@ -177,8 +139,6 @@ public class WakeupReceiver extends BroadcastReceiver {
             Log.w(TAG, "onReceive: ", e);
         } catch (ClassNotFoundException e) {
             Log.w(TAG, "onReceive: ", e);
-        } catch (PackageManager.NameNotFoundException e) {
-            Log.w(TAG, "onReceive: ", e);
         }
     }
 
@@ -186,11 +146,11 @@ public class WakeupReceiver extends BroadcastReceiver {
     private Notification buildNotification(String message, int appIconResId, Uri alarmSound, PendingIntent contentIntent) throws JSONException {
 
         NotificationCompat.Builder builder = new NotificationCompat.Builder(context, "org.nypr.cordova.wakeupplugin." + TAG)
-                .setSmallIcon(getResourceId("ic_fa_bell", "drawable"))
+                .setSmallIcon(appIconResId)
                 .setContentTitle(message)
                 .setAutoCancel(true);
 
-        builder.setSound(alarmSound);
+        builder.setSound(alarmSound,AudioManager.STREAM_MUSIC);
         builder.setContentIntent(contentIntent);
         return builder.build();
     }
@@ -229,6 +189,34 @@ public class WakeupReceiver extends BroadcastReceiver {
             }
         }
         return false;
+    }
+
+    public class Configuration {
+        private final JSONObject config;
+
+        public Configuration(JSONObject config) {
+            this.config = config;
+        }
+
+        public Uri getSound() throws JSONException {
+            return Uri.parse(config.getString("sound"));
+        }
+
+        public String getMessage() throws JSONException {
+            return config.getString("message");
+        }
+
+        public String getStreamUrl() throws JSONException {
+            return config.getString("streamurl");
+        }
+
+        public int getId() throws JSONException {
+            return config.getInt("id");
+        }
+
+        public int getDuration() throws JSONException {
+            return config.getInt("duration");
+        }
     }
 
 }
