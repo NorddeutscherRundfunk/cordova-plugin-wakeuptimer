@@ -145,7 +145,8 @@ public class WakeupReceiver extends BroadcastReceiver {
     @NonNull
     private Notification buildNotification(String message, int appIconResId, Uri alarmSound, PendingIntent contentIntent) throws JSONException {
 
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(context, "org.nypr.cordova.wakeupplugin." + TAG)
+
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(context)
                 .setSmallIcon(appIconResId)
                 .setContentTitle(message)
                 .setAutoCancel(true);
